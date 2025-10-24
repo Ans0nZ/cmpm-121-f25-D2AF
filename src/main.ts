@@ -15,6 +15,9 @@ document.body.innerHTML = `
 const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 
+//step 2 clear function
+const clearBtn = document.getElementById("clear-btn") as HTMLButtonElement;
+
 // types of pen
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
@@ -62,4 +65,8 @@ canvas.addEventListener("mouseup", () => {
 
 canvas.addEventListener("mouseleave", () => {
   drawing = false;
+});
+
+clearBtn.addEventListener("click", () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 });

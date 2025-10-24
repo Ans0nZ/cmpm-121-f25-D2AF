@@ -36,3 +36,21 @@ header, main {
   background: #fff;
   display: block;
 }
+
+.toolbar {
+  margin-top: 12px;
+  display: grid;
+  place-items: center;
+}
+
+#clear-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+
+#clear-btn:hover {
+  filter: brightness(0.98);
+}
