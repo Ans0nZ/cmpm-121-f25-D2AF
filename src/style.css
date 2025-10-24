@@ -43,6 +43,30 @@ header, main {
   place-items: center;
 }
 
+#undo-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+
+#undo-btn:hover {
+  filter: brightness(0.98);
+}
+
+#redo-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+
+#redo-btn:hover {
+  filter: brightness(0.98);
+}
+
 #clear-btn {
   padding: 8px 14px;
   border: 1px solid #ccc;

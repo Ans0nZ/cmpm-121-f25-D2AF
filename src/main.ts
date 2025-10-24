@@ -53,7 +53,7 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!drawing || !currentStroke) return; 
+  if (!drawing || !currentStroke) return;
   const { x, y } = getPos(e);
 
   currentStroke.push({ x, y });
