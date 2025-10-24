@@ -24,11 +24,13 @@ ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#222";
 
+// --- Step 3: display list data ---
+type Point = { x: number; y: number };
+let strokes: Point[][] = []; // store the "dots"
+let currentStroke: Point[] | null = null; // current dot
+
 // drawing
 let drawing = false;
-let lastX = 0;
-let lastY = 0;
-
 function getPos(e: MouseEvent) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -41,32 +43,59 @@ function getPos(e: MouseEvent) {
 canvas.addEventListener("mousedown", (e) => {
   drawing = true;
   const { x, y } = getPos(e);
-  lastX = x;
-  lastY = y;
+
+  //step 3
+  currentStroke = [];
+  strokes.push(currentStroke);
+  currentStroke.push({ x, y });
+
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
 
 canvas.addEventListener("mousemove", (e) => {
   if (!drawing) return;
   const { x, y } = getPos(e);
 
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.stroke();
+  currentStroke.push({ x, y });
 
-  lastX = x;
-  lastY = y;
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
 
 // prevent drawing out of canvas
 canvas.addEventListener("mouseup", () => {
   drawing = false;
+  currentStroke = null;
 });
 
 canvas.addEventListener("mouseleave", () => {
   drawing = false;
+  currentStroke = null;
 });
 
-clearBtn.addEventListener("click", () => {
+//step 3 redraw
+canvas.addEventListener("drawing-changed", redraw);
+
+function redraw() {
+  // clear out the canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // redraw
+  for (const stroke of strokes) {
+    if (stroke.length < 2) {
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  }
+}
+
+clearBtn.addEventListener("click", () => {
+  strokes.length = 0;
+  currentStroke = null;
+
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
