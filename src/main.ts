@@ -26,7 +26,7 @@ ctx.strokeStyle = "#222";
 
 // --- Step 3: display list data ---
 type Point = { x: number; y: number };
-let strokes: Point[][] = []; // store the "dots"
+const strokes: Point[][] = []; // store the "dots"
 let currentStroke: Point[] | null = null; // current dot
 
 // drawing
@@ -53,7 +53,7 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
+  if (!drawing || !currentStroke) return; 
   const { x, y } = getPos(e);
 
   currentStroke.push({ x, y });
