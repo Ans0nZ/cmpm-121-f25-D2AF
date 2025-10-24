@@ -7,6 +7,8 @@ document.body.innerHTML = `
   <main>
     <canvas id="game-canvas" class="game-canvas" width="256" height="256"></canvas>
     <div class="toolbar">
+      <button id="undo-btn" type="button">Undo</button>
+      <button id="redo-btn" type="button">Redo</button>
       <button id="clear-btn" type="button">Clear</button>
     </div>
   </main>
