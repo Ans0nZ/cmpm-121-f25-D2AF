@@ -6,6 +6,9 @@ document.body.innerHTML = `
   </header>
   <main>
     <canvas id="game-canvas" class="game-canvas" width="256" height="256"></canvas>
+    <div class="toolbar">
+      <button id="clear-btn" type="button">Clear</button>
+    </div>
   </main>
 `;
 
