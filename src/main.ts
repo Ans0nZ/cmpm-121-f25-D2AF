@@ -110,7 +110,7 @@ function createToolPreview(getWidth: () => number): PreviewDrawable {
     draw(ctx: CanvasRenderingContext2D) {
       if (!pos) return;
 
-      const r = Math.max(1, getWidth() / 2);
+      const r = Math.max(3, getWidth() / 2 * 3);
       ctx.save();
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
@@ -121,10 +121,10 @@ function createToolPreview(getWidth: () => number): PreviewDrawable {
       const prevWidth = ctx.lineWidth;
       const prevStyle = ctx.strokeStyle;
 
-      ctx.globalAlpha = 0.7;
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "#666";
+      ctx.globalAlpha = 1.0;
+      ctx.getLineDash();
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#0e021bff";
 
       ctx.stroke();
 

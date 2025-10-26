@@ -78,3 +78,7 @@ header, main {
 #clear-btn:hover {
   filter: brightness(0.98);
 }
+
+.game-canvas:hover {
+  cursor: none;
+}
