@@ -7,6 +7,8 @@ document.body.innerHTML = `
   <main>
     <canvas id="game-canvas" class="game-canvas" width="256" height="256"></canvas>
     <div class="toolbar">
+      <button id="thin-btn"  type="button">Thin</button>
+      <button id="thick-btn" type="button">Thick</button>
       <button id="undo-btn" type="button">Undo</button>
       <button id="redo-btn" type="button">Redo</button>
       <button id="clear-btn" type="button">Clear</button>
@@ -32,6 +34,14 @@ ctx.strokeStyle = "#222";
 
 // --- Step 3: display list data ---
 type Point = { x: number; y: number };
+
+//step 5: command interface
+interface DisplayCommand {
+  display(ctx: CanvasRenderingContext2D): void;
+  drag?(x: number, y: number): void;
+}
+
+
 const strokes: Point[][] = []; // store the "dots"
 let currentStroke: Point[] | null = null; // current dot
 
