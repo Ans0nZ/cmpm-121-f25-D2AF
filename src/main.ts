@@ -20,6 +20,10 @@ const ctx = canvas.getContext("2d")!;
 //step 2 clear function
 const clearBtn = document.getElementById("clear-btn") as HTMLButtonElement;
 
+//step 4 undo&redo buttom
+const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
+const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
+
 // types of pen
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
@@ -30,6 +34,8 @@ ctx.strokeStyle = "#222";
 type Point = { x: number; y: number };
 const strokes: Point[][] = []; // store the "dots"
 let currentStroke: Point[] | null = null; // current dot
+
+const redoStack: Point[][] = [];
 
 // drawing
 let drawing = false;
@@ -50,6 +56,9 @@ canvas.addEventListener("mousedown", (e) => {
   currentStroke = [];
   strokes.push(currentStroke);
   currentStroke.push({ x, y });
+
+  //clearing
+  redoStack.length = 0;
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
@@ -74,8 +83,32 @@ canvas.addEventListener("mouseleave", () => {
   currentStroke = null;
 });
 
+// step 4: undo / redo
+undoBtn.addEventListener("click", () => {
+  if (strokes.length === 0) return;
+  const undone = strokes.pop()!;
+  redoStack.push(undone);
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
+redoBtn.addEventListener("click", () => {
+  if (redoStack.length === 0) return;
+  const restored = redoStack.pop()!;
+  strokes.push(restored);
+  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
 //step 3 redraw
 canvas.addEventListener("drawing-changed", redraw);
+
+//step 4 disable redo/undo buttom
+canvas.addEventListener("drawing-changed", updateButtons);
+
+function updateButtons() {
+  undoBtn.disabled = strokes.length === 0;
+  redoBtn.disabled = redoStack.length === 0;
+}
+updateButtons();
 
 function redraw() {
   // clear out the canvas
@@ -97,6 +130,7 @@ function redraw() {
 
 clearBtn.addEventListener("click", () => {
   strokes.length = 0;
+  redoStack.length = 0;
   currentStroke = null;
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
