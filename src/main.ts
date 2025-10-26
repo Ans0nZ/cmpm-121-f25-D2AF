@@ -44,6 +44,9 @@ function selectTool(width: number) {
 
   thinBtn.classList.toggle("selectedTool", width === THIN);
   thickBtn.classList.toggle("selectedTool", width === THICK);
+
+  // notify tool change
+  canvas.dispatchEvent(new CustomEvent("tool-moved"));
 }
 
 thinBtn.addEventListener("click", () => selectTool(THIN));
@@ -86,10 +89,62 @@ function createMarkerLine(width: number): DisplayCommand {
   };
 }
 
+//Step 7: tool preview object
+interface PreviewDrawable {
+  set(x: number, y: number): void; // preview center
+  draw(ctx: CanvasRenderingContext2D): void;
+  clear?(): void;
+}
+
+// step 7 create tool preview
+function createToolPreview(getWidth: () => number): PreviewDrawable {
+  let pos: Point | null = null;
+
+  return {
+    set(x: number, y: number) {
+      pos = { x, y };
+    },
+    clear() {
+      pos = null;
+    },
+    draw(ctx: CanvasRenderingContext2D) {
+      if (!pos) return;
+
+      const r = Math.max(1, getWidth() / 2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+
+      //
+      const prevAlpha = ctx.globalAlpha;
+      const prevDash = ctx.getLineDash();
+      const prevWidth = ctx.lineWidth;
+      const prevStyle = ctx.strokeStyle;
+
+      ctx.globalAlpha = 0.7;
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#666";
+
+      ctx.stroke();
+
+      // 还原
+      ctx.setLineDash(prevDash);
+      ctx.globalAlpha = prevAlpha;
+      ctx.lineWidth = prevWidth;
+      ctx.strokeStyle = prevStyle;
+
+      ctx.restore();
+    },
+  };
+}
+
 const strokes: DisplayCommand[] = []; // store the "dots"
 let currentStroke: DisplayCommand | null = null; // current dot
 
 const redoStack: DisplayCommand[] = [];
+
+const preview = createToolPreview(() => currentWidth);
 
 // drawing
 let drawing = false;
@@ -118,12 +173,15 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!drawing || !currentStroke) return;
   const { x, y } = getPos(e);
-
-  currentStroke.drag!(x, y);
-
-  canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  //step 7 display preview
+  if (drawing && currentStroke) {
+    currentStroke.drag!(x, y);
+    canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+  } else {
+    preview.set(x, y);
+    canvas.dispatchEvent(new CustomEvent("tool-moved"));
+  }
 });
 
 // prevent drawing out of canvas
@@ -135,6 +193,9 @@ canvas.addEventListener("mouseup", () => {
 canvas.addEventListener("mouseleave", () => {
   drawing = false;
   currentStroke = null;
+  // step 7 clear preview
+  preview.clear?.();
+  canvas.dispatchEvent(new CustomEvent("tool-moved"));
 });
 
 // step 4: undo / redo
@@ -155,6 +216,9 @@ redoBtn.addEventListener("click", () => {
 //step 3 redraw
 canvas.addEventListener("drawing-changed", redraw);
 
+// step 7 redraw preview
+canvas.addEventListener("tool-moved", redraw);
+
 //step 4 disable redo/undo buttom
 canvas.addEventListener("drawing-changed", updateButtons);
 
@@ -171,6 +235,11 @@ function redraw() {
   // redraw
   for (const stroke of strokes) {
     stroke.display(ctx);
+  }
+
+  // step 7 draw preview
+  if (!drawing) {
+    preview.draw(ctx);
   }
 }
 
