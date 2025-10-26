@@ -30,7 +30,9 @@ const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
 const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
 
 //step 8
-const stickerBtns = document.querySelectorAll<HTMLButtonElement>(".sticker-btn");
+const stickerBtns = document.querySelectorAll<HTMLButtonElement>(
+  ".sticker-btn",
+);
 
 // tool mode
 const TOOL_MARKER = "marker" as const;
@@ -39,7 +41,7 @@ let currentTool: "marker" | "sticker" = TOOL_MARKER;
 
 // sticker state
 let currentSticker = "😂";
-let currentStickerSize = 48; 
+const currentStickerSize = 48;
 
 // types of pen
 //step 6 pen status
@@ -57,17 +59,17 @@ const thickBtn = document.getElementById("thick-btn") as HTMLButtonElement;
 function selectTool(width: number) {
   currentWidth = width;
 
+  currentTool = TOOL_MARKER;
   thinBtn.classList.toggle("selectedTool", width === THIN);
   thickBtn.classList.toggle("selectedTool", width === THICK);
 
+  preview = markerPreview;
   // notify tool change
   canvas.dispatchEvent(new CustomEvent("tool-moved"));
 }
 
 thinBtn.addEventListener("click", () => selectTool(THIN));
 thickBtn.addEventListener("click", () => selectTool(THICK));
-
-selectTool(currentWidth);
 
 // --- Step 3: display list data ---
 type Point = { x: number; y: number };
@@ -122,14 +124,14 @@ function createStickerCommand(emoji: string, size: number): DisplayCommand {
         fill: ctx.fillStyle as string,
       };
 
-      ctx.font = `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.font =
+        `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.globalAlpha = 1.0;
-      ctx.fillStyle = "#000"; 
+      ctx.fillStyle = "#000";
       ctx.fillText(emoji, pos.x, pos.y);
 
-      
       ctx.font = prev.font;
       ctx.textAlign = prev.align;
       ctx.textBaseline = prev.base;
@@ -190,7 +192,10 @@ function createToolPreview(getWidth: () => number): PreviewDrawable {
 }
 
 //step 8 create sticker preview
-function createStickerPreview(getEmoji: () => string, getSize: () => number): PreviewDrawable {
+function createStickerPreview(
+  getEmoji: () => string,
+  getSize: () => number,
+): PreviewDrawable {
   let pos: Point | null = null;
 
   return {
@@ -212,10 +217,11 @@ function createStickerPreview(getEmoji: () => string, getSize: () => number): Pr
         alpha: ctx.globalAlpha,
       };
 
-      ctx.font = `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.font =
+        `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.globalAlpha = 0.6;            
+      ctx.globalAlpha = 0.6;
       ctx.fillText(emoji, pos.x, pos.y);
 
       ctx.font = prev.font;
@@ -234,10 +240,15 @@ const redoStack: DisplayCommand[] = [];
 //const preview = createToolPreview(() => currentWidth);
 
 //step 8 update preview tool when tool changed
-const markerPreview  = createToolPreview(() => currentWidth);
-const stickerPreview = createStickerPreview(() => currentSticker, () => currentStickerSize);
+const markerPreview = createToolPreview(() => currentWidth);
+const stickerPreview = createStickerPreview(
+  () => currentSticker,
+  () => currentStickerSize,
+);
 
 let preview: PreviewDrawable = markerPreview;
+
+selectTool(currentWidth);
 
 // drawing
 let drawing = false;
@@ -254,13 +265,18 @@ canvas.addEventListener("mousedown", (e) => {
   drawing = true;
   const { x, y } = getPos(e);
 
-  //step 3
-  currentStroke = createMarkerLine(currentWidth);
-  strokes.push(currentStroke);
-  currentStroke.drag!(x, y);
-
-  //clearing
   redoStack.length = 0;
+
+  if (currentTool === "marker") {
+    // 创建一个 marker 线条
+    currentStroke = createMarkerLine(currentWidth);
+    strokes.push(currentStroke);
+    currentStroke.drag!(x, y);
+  } else if (currentTool === "sticker") {
+    currentStroke = createStickerCommand(currentSticker, currentStickerSize); // 传入 size，而不是 x
+    strokes.push(currentStroke);
+    currentStroke.drag!(x, y);
+  }
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
@@ -270,8 +286,8 @@ stickerBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
     currentTool = TOOL_STICKER;
     currentSticker = btn.dataset.emoji ?? "😂";
-    preview = stickerPreview; 
-    canvas.dispatchEvent(new CustomEvent("tool-moved")); 
+    preview = stickerPreview;
+    canvas.dispatchEvent(new CustomEvent("tool-moved"));
   });
 });
 
