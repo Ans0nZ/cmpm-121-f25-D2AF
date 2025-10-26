@@ -41,11 +41,36 @@ interface DisplayCommand {
   drag?(x: number, y: number): void;
 }
 
+function createMarkerLine(width: number): DisplayCommand {
+  const points: Point[] = [];
 
-const strokes: Point[][] = []; // store the "dots"
-let currentStroke: Point[] | null = null; // current dot
+  return {
+    drag(x: number, y: number) {
+      points.push({ x, y });
+    },
 
-const redoStack: Point[][] = [];
+    display(ctx: CanvasRenderingContext2D) {
+      if (points.length < 2) return;
+
+      const prevWidth = ctx.lineWidth;
+      ctx.lineWidth = width;
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+
+      ctx.lineWidth = prevWidth;
+    },
+  };
+}
+
+const strokes: DisplayCommand[] = []; // store the "dots"
+let currentStroke: DisplayCommand | null = null; // current dot
+
+const redoStack: DisplayCommand[] = [];
 
 // drawing
 let drawing = false;
@@ -63,9 +88,9 @@ canvas.addEventListener("mousedown", (e) => {
   const { x, y } = getPos(e);
 
   //step 3
-  currentStroke = [];
+  currentStroke = createMarkerLine(ctx.lineWidth);
   strokes.push(currentStroke);
-  currentStroke.push({ x, y });
+  currentStroke.drag!(x, y);
 
   //clearing
   redoStack.length = 0;
@@ -77,7 +102,7 @@ canvas.addEventListener("mousemove", (e) => {
   if (!drawing || !currentStroke) return;
   const { x, y } = getPos(e);
 
-  currentStroke.push({ x, y });
+  currentStroke.drag!(x, y);
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
@@ -126,15 +151,7 @@ function redraw() {
 
   // redraw
   for (const stroke of strokes) {
-    if (stroke.length < 2) {
-      continue;
-    }
-    ctx.beginPath();
-    ctx.moveTo(stroke[0].x, stroke[0].y);
-    for (let i = 1; i < stroke.length; i++) {
-      ctx.lineTo(stroke[i].x, stroke[i].y);
-    }
-    ctx.stroke();
+    stroke.display(ctx);
   }
 }
 
