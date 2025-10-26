@@ -29,6 +29,18 @@ const clearBtn = document.getElementById("clear-btn") as HTMLButtonElement;
 const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
 const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
 
+//step 8
+const stickerBtns = document.querySelectorAll<HTMLButtonElement>(".sticker-btn");
+
+// tool mode
+const TOOL_MARKER = "marker" as const;
+const TOOL_STICKER = "sticker" as const;
+let currentTool: "marker" | "sticker" = TOOL_MARKER;
+
+// sticker state
+let currentSticker = "😂";
+let currentStickerSize = 48; 
+
 // types of pen
 //step 6 pen status
 const THIN = 2;
@@ -92,6 +104,41 @@ function createMarkerLine(width: number): DisplayCommand {
   };
 }
 
+// step8: create sticker command
+function createStickerCommand(emoji: string, size: number): DisplayCommand {
+  let pos: Point | null = null;
+
+  return {
+    drag(x: number, y: number) {
+      pos = { x, y };
+    },
+    display(ctx: CanvasRenderingContext2D) {
+      if (!pos) return;
+      const prev = {
+        font: ctx.font,
+        align: ctx.textAlign,
+        base: ctx.textBaseline,
+        alpha: ctx.globalAlpha,
+        fill: ctx.fillStyle as string,
+      };
+
+      ctx.font = `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = 1.0;
+      ctx.fillStyle = "#000"; 
+      ctx.fillText(emoji, pos.x, pos.y);
+
+      
+      ctx.font = prev.font;
+      ctx.textAlign = prev.align;
+      ctx.textBaseline = prev.base;
+      ctx.globalAlpha = prev.alpha;
+      ctx.fillStyle = prev.fill;
+    },
+  };
+}
+
 //Step 7: tool preview object
 interface PreviewDrawable {
   set(x: number, y: number): void; // preview center
@@ -142,12 +189,55 @@ function createToolPreview(getWidth: () => number): PreviewDrawable {
   };
 }
 
+//step 8 create sticker preview
+function createStickerPreview(getEmoji: () => string, getSize: () => number): PreviewDrawable {
+  let pos: Point | null = null;
+
+  return {
+    set(x: number, y: number) {
+      pos = { x, y };
+    },
+    clear() {
+      pos = null;
+    },
+    draw(ctx: CanvasRenderingContext2D) {
+      if (!pos) return;
+      const emoji = getEmoji();
+      const size = getSize();
+
+      const prev = {
+        font: ctx.font,
+        align: ctx.textAlign,
+        base: ctx.textBaseline,
+        alpha: ctx.globalAlpha,
+      };
+
+      ctx.font = `${size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = 0.6;            
+      ctx.fillText(emoji, pos.x, pos.y);
+
+      ctx.font = prev.font;
+      ctx.textAlign = prev.align;
+      ctx.textBaseline = prev.base;
+      ctx.globalAlpha = prev.alpha;
+    },
+  };
+}
+
 const strokes: DisplayCommand[] = []; // store the "dots"
 let currentStroke: DisplayCommand | null = null; // current dot
 
 const redoStack: DisplayCommand[] = [];
 
-const preview = createToolPreview(() => currentWidth);
+//const preview = createToolPreview(() => currentWidth);
+
+//step 8 update preview tool when tool changed
+const markerPreview  = createToolPreview(() => currentWidth);
+const stickerPreview = createStickerPreview(() => currentSticker, () => currentStickerSize);
+
+let preview: PreviewDrawable = markerPreview;
 
 // drawing
 let drawing = false;
@@ -173,6 +263,16 @@ canvas.addEventListener("mousedown", (e) => {
   redoStack.length = 0;
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
+// step8: sticker tool selected
+stickerBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    currentTool = TOOL_STICKER;
+    currentSticker = btn.dataset.emoji ?? "😂";
+    preview = stickerPreview; 
+    canvas.dispatchEvent(new CustomEvent("tool-moved")); 
+  });
 });
 
 canvas.addEventListener("mousemove", (e) => {
