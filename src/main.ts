@@ -9,6 +9,9 @@ document.body.innerHTML = `
     <div class="toolbar">
       <button id="thin-btn"  type="button">Thin</button>
       <button id="thick-btn" type="button">Thick</button>
+      <button class="sticker-btn" data-emoji="😂"  type="button">😂</button>
+      <button class="sticker-btn" data-emoji="👌"  type="button">👌</button>
+      <button class="sticker-btn" data-emoji="✌️"  type="button">✌️</button>
       <button id="undo-btn" type="button">Undo</button>
       <button id="redo-btn" type="button">Redo</button>
       <button id="clear-btn" type="button">Clear</button>
