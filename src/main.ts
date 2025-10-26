@@ -27,10 +27,29 @@ const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
 const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
 
 // types of pen
-ctx.lineWidth = 4;
+//step 6 pen status
+const THIN = 2;
+const THICK = 8;
+let currentWidth = THIN; // default pen width
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#222";
+
+//step 6 thin%thick buttom
+const thinBtn = document.getElementById("thin-btn") as HTMLButtonElement;
+const thickBtn = document.getElementById("thick-btn") as HTMLButtonElement;
+
+function selectTool(width: number) {
+  currentWidth = width;
+
+  thinBtn.classList.toggle("selectedTool", width === THIN);
+  thickBtn.classList.toggle("selectedTool", width === THICK);
+}
+
+thinBtn.addEventListener("click", () => selectTool(THIN));
+thickBtn.addEventListener("click", () => selectTool(THICK));
+
+selectTool(currentWidth);
 
 // --- Step 3: display list data ---
 type Point = { x: number; y: number };
@@ -88,7 +107,7 @@ canvas.addEventListener("mousedown", (e) => {
   const { x, y } = getPos(e);
 
   //step 3
-  currentStroke = createMarkerLine(ctx.lineWidth);
+  currentStroke = createMarkerLine(currentWidth);
   strokes.push(currentStroke);
   currentStroke.drag!(x, y);
 
