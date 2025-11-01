@@ -14,6 +14,7 @@ document.body.innerHTML = `
       <button id="undo-btn" type="button">Undo</button>
       <button id="redo-btn" type="button">Redo</button>
       <button id="clear-btn" type="button">Clear</button>
+      <button id="export-btn" type="button">Export</button>
     </div>
   </main>
 `;
@@ -35,8 +36,6 @@ const stickerBtns = document.querySelectorAll<HTMLButtonElement>(
 );
 */
 
-
-
 // tool mode
 const TOOL_MARKER = "marker" as const;
 const TOOL_STICKER = "sticker" as const;
@@ -52,7 +51,7 @@ const THIN = 2;
 const THICK = 8;
 let currentWidth = THIN; // default pen width
 
-// Step 9: data-driven stickers 
+// Step 9: data-driven stickers
 const stickers: string[] = ["😂", "👌", "✌️"];
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
@@ -63,33 +62,41 @@ const thinBtn = document.getElementById("thin-btn") as HTMLButtonElement;
 const thickBtn = document.getElementById("thick-btn") as HTMLButtonElement;
 
 // step 9 render sticker buttom
-const stickersHost = document.getElementById("stickers-host") as HTMLSpanElement;
-const addStickerBtn = document.getElementById("add-sticker-btn") as HTMLButtonElement;
+const stickersHost = document.getElementById(
+  "stickers-host",
+) as HTMLSpanElement;
+const addStickerBtn = document.getElementById(
+  "add-sticker-btn",
+) as HTMLButtonElement;
 
 function renderStickers() {
   stickersHost.innerHTML = stickers
-    .map((s) => `<button class="sticker-btn" data-emoji="${s}" type="button">${s}</button>`)
+    .map((s) =>
+      `<button class="sticker-btn" data-emoji="${s}" type="button">${s}</button>`
+    )
     .join("");
 }
 renderStickers();
 
 // step 9: use event delegation to handle sticker button clicks
 stickersHost.addEventListener("click", (e) => {
-  const btn = (e.target as HTMLElement).closest("button.sticker-btn") as HTMLButtonElement | null;
+  const btn = (e.target as HTMLElement).closest("button.sticker-btn") as
+    | HTMLButtonElement
+    | null;
   if (!btn) return;
 
   currentTool = TOOL_STICKER;
   currentSticker = btn.dataset.emoji ?? stickers[0];
 
-  preview = stickerPreview;                         
-  canvas.dispatchEvent(new CustomEvent("tool-moved")); 
+  preview = stickerPreview;
+  canvas.dispatchEvent(new CustomEvent("tool-moved"));
 });
 
 addStickerBtn.addEventListener("click", () => {
   const value = prompt("Enter a sticker (emoji or short text):", "🙂");
-  if (!value) return;                  // 取消或空串就不添加
-  stickers.push(value);                // 加入数据源
-  renderStickers();                    // 重新渲染按钮
+  if (!value) return; // 取消或空串就不添加
+  stickers.push(value); // 加入数据源
+  renderStickers(); // 重新渲染按钮
 
   // 选中新贴纸并切到贴纸工具
   currentTool = TOOL_STICKER;
