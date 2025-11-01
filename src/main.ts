@@ -29,6 +29,9 @@ const clearBtn = document.getElementById("clear-btn") as HTMLButtonElement;
 const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
 const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
 
+// step 10 export buttom
+const exportBtn = document.getElementById("export-btn") as HTMLButtonElement;
+
 //step 8
 /*
 const stickerBtns = document.querySelectorAll<HTMLButtonElement>(
@@ -418,4 +421,39 @@ clearBtn.addEventListener("click", () => {
   currentStroke = null;
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
+});
+
+// step 10: export button
+exportBtn.addEventListener("click", () => {
+  const SCALE = 1024 / canvas.width; //  x4 in this case
+  const out = document.createElement("canvas");
+  out.width = 1024;
+  out.height = 1024;
+  const octx = out.getContext("2d");
+  if (!octx) return;
+
+  // white background
+  octx.fillStyle = "#fff";
+  octx.fillRect(0, 0, out.width, out.height);
+
+  // copy from the main canvas context
+  octx.lineCap = ctx.lineCap;
+  octx.lineJoin = ctx.lineJoin;
+  octx.strokeStyle = ctx.strokeStyle;
+
+  octx.scale(SCALE, SCALE);
+
+  for (const cmd of strokes) {
+    cmd.display(octx);
+  }
+
+  // save to PNG
+  const url = out.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "drawing-1024.png";
+  // trigger download
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 });
