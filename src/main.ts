@@ -9,9 +9,8 @@ document.body.innerHTML = `
     <div class="toolbar">
       <button id="thin-btn"  type="button">Thin</button>
       <button id="thick-btn" type="button">Thick</button>
-      <button class="sticker-btn" data-emoji="😂"  type="button">😂</button>
-      <button class="sticker-btn" data-emoji="👌"  type="button">👌</button>
-      <button class="sticker-btn" data-emoji="✌️"  type="button">✌️</button>
+      <span id="stickers-host"></span>
+      <button id="add-sticker-btn" type="button">＋ Custom</button>
       <button id="undo-btn" type="button">Undo</button>
       <button id="redo-btn" type="button">Redo</button>
       <button id="clear-btn" type="button">Clear</button>
@@ -30,9 +29,13 @@ const undoBtn = document.getElementById("undo-btn") as HTMLButtonElement;
 const redoBtn = document.getElementById("redo-btn") as HTMLButtonElement;
 
 //step 8
+/*
 const stickerBtns = document.querySelectorAll<HTMLButtonElement>(
   ".sticker-btn",
 );
+*/
+
+
 
 // tool mode
 const TOOL_MARKER = "marker" as const;
@@ -48,6 +51,9 @@ const currentStickerSize = 48;
 const THIN = 2;
 const THICK = 8;
 let currentWidth = THIN; // default pen width
+
+// Step 9: data-driven stickers 
+const stickers: string[] = ["😂", "👌", "✌️"];
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#222";
@@ -55,6 +61,42 @@ ctx.strokeStyle = "#222";
 //step 6 thin%thick buttom
 const thinBtn = document.getElementById("thin-btn") as HTMLButtonElement;
 const thickBtn = document.getElementById("thick-btn") as HTMLButtonElement;
+
+// step 9 render sticker buttom
+const stickersHost = document.getElementById("stickers-host") as HTMLSpanElement;
+const addStickerBtn = document.getElementById("add-sticker-btn") as HTMLButtonElement;
+
+function renderStickers() {
+  stickersHost.innerHTML = stickers
+    .map((s) => `<button class="sticker-btn" data-emoji="${s}" type="button">${s}</button>`)
+    .join("");
+}
+renderStickers();
+
+// step 9: use event delegation to handle sticker button clicks
+stickersHost.addEventListener("click", (e) => {
+  const btn = (e.target as HTMLElement).closest("button.sticker-btn") as HTMLButtonElement | null;
+  if (!btn) return;
+
+  currentTool = TOOL_STICKER;
+  currentSticker = btn.dataset.emoji ?? stickers[0];
+
+  preview = stickerPreview;                         
+  canvas.dispatchEvent(new CustomEvent("tool-moved")); 
+});
+
+addStickerBtn.addEventListener("click", () => {
+  const value = prompt("Enter a sticker (emoji or short text):", "🙂");
+  if (!value) return;                  // 取消或空串就不添加
+  stickers.push(value);                // 加入数据源
+  renderStickers();                    // 重新渲染按钮
+
+  // 选中新贴纸并切到贴纸工具
+  currentTool = TOOL_STICKER;
+  currentSticker = value;
+  preview = stickerPreview;
+  canvas.dispatchEvent(new CustomEvent("tool-moved"));
+});
 
 function selectTool(width: number) {
   currentWidth = width;
@@ -280,7 +322,7 @@ canvas.addEventListener("mousedown", (e) => {
 
   canvas.dispatchEvent(new CustomEvent("drawing-changed"));
 });
-
+/*
 // step8: sticker tool selected
 stickerBtns.forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -290,6 +332,7 @@ stickerBtns.forEach((btn) => {
     canvas.dispatchEvent(new CustomEvent("tool-moved"));
   });
 });
+*/
 
 canvas.addEventListener("mousemove", (e) => {
   const { x, y } = getPos(e);
